@@ -2,9 +2,30 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ref, set } from "firebase/database";
+import { ref, set, get } from "firebase/database";
 import { auth, db } from "@/lib/firebase";
-import type { PatientUser, DoctorUser } from "@/lib/types";
+import { useAppDispatch } from "@/store/hooks";
+import { setUser } from "@/store/authSlice";
+
+function generatePatientIdCandidate() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let id = "";
+  for (let i = 0; i < 8; i++) {
+    id += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return id;
+}
+
+async function generateUniquePatientId() {
+  // try a few times to avoid collision
+  for (let tries = 0; tries < 5; tries++) {
+    const candidate = generatePatientIdCandidate();
+    const snap = await get(ref(db, `patients/${candidate}`));
+    if (!snap.exists()) return candidate;
+  }
+  // fallback - if collisions (very unlikely), append timestamp
+  return `P${Date.now().toString(36).toUpperCase().slice(-7)}`;
+}
 
 export default function CompleteProfileForm() {
   const [formData, setFormData] = useState({
@@ -25,24 +46,24 @@ export default function CompleteProfileForm() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const dispatch = useAppDispatch();
 
   const user = auth.currentUser;
 
-  // Pre-fill name if coming from Google Sign-In
   useEffect(() => {
     if (user?.displayName) {
-      const nameParts = user.displayName.split(" ");
-      setFormData((prev) => ({
-        ...prev,
-        firstName: nameParts[0] || "",
-        lastName: nameParts.slice(1).join(" ") || "",
+      const parts = user.displayName.split(" ");
+      setFormData((p) => ({
+        ...p,
+        firstName: parts[0] || "",
+        lastName: parts.slice(1).join(" ") || "",
       }));
     }
   }, [user]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((p) => ({ ...p, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,43 +78,63 @@ export default function CompleteProfileForm() {
     const displayName = `${formData.firstName} ${formData.lastName}`.trim();
 
     try {
-      const userProfile: PatientUser | DoctorUser =
-        role === "patient"
-          ? {
-              uid: user.uid,
-              email: user.email,
-              displayName,
-              role: "patient",
-              patientDataId: `PATIENT_${user.uid.slice(0, 8).toUpperCase()}`, // This can be your own logic
-              profile: formData, // Storing all extra details here
-            }
-          : {
-              uid: user.uid,
-              email: user.email,
-              displayName,
-              role: "doctor",
-              assignedPatients: {},
-              profile: formData,
-            };
+      if (role === "doctor") {
+        // write full doctor profile under /users/{uid}
+        const doctorObj = {
+          uid: user.uid,
+          email: user.email,
+          displayName,
+          role: "doctor",
+          profile: formData,
+        };
 
-      await set(ref(db, `users/${user.uid}`), userProfile);
+        await set(ref(db, `users/${user.uid}`), doctorObj);
+        // update Redux immediately
+        dispatch(setUser(doctorObj));
+      } else {
+        // patient flow:
+        const patientId = await generateUniquePatientId();
 
-      // We need to manually refresh the token to make sure AuthProvider re-evaluates
-      // This is a bit of a trick to force a state update
+        // 1) Write minimal /users/{uid} stub first (so AuthProvider sees it)
+        const userStub = {
+          uid: user.uid,
+          email: user.email,
+          role: "patient",
+          patientDataId: patientId,
+        };
+        await set(ref(db, `users/${user.uid}`), userStub);
+
+        // immediately update redux so AuthProvider doesn't redirect
+        dispatch(setUser(userStub));
+
+        // 2) Write actual patient record under /patients/{patientId}
+        const patientRecord = {
+          name: displayName,
+          dob: formData.dob,
+          gender: formData.gender,
+          height_cm: formData.height,
+          weight_kg: formData.weight,
+          previous_diseases: [],
+          reports: [],
+        };
+        await set(ref(db, `patients/${patientId}`), patientRecord);
+
+        // save patientId locally for convenient access by dashboard
+        localStorage.setItem("patientId", patientId);
+      }
+
+      // refresh token (so any token-based claims update) and then push
       await user.getIdToken(true);
-      window.location.href = "/dashboard"; // Force a full reload to re-run AuthProvider logic cleanly
+      router.push("/dashboard");
     } catch (err) {
+      console.error("CompleteProfile error:", err);
       setError("Failed to save profile. Please try again.");
       setIsLoading(false);
     }
   };
 
-  if (!user) {
-    // You can show a loading state or a message here
-    return <div>Loading user information...</div>;
-  }
+  if (!user) return <div>Loading user information...</div>;
 
-  // All the JSX for the large form goes here
   return (
     <div className="rounded-lg border bg-white p-8 shadow-sm">
       <h1 className="text-2xl font-bold text-gray-900">
@@ -105,8 +146,7 @@ export default function CompleteProfileForm() {
         onSubmit={handleSubmit}
         className="mt-8 grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-8"
       >
-        {/* Input fields for firstName, lastName, gender, etc. using the `formData` state and `handleChange` */}
-        {/* Example for one field: */}
+        {/* First Name */}
         <div>
           <label
             htmlFor="firstName"
@@ -115,15 +155,16 @@ export default function CompleteProfileForm() {
             First Name
           </label>
           <input
-            type="text"
-            name="firstName"
             id="firstName"
+            name="firstName"
             value={formData.firstName}
             onChange={handleChange}
             required
             className="mt-1 block w-full rounded-md border-gray-300 p-2 shadow-sm"
           />
         </div>
+
+        {/* Last Name */}
         <div>
           <label
             htmlFor="lastName"
@@ -132,25 +173,23 @@ export default function CompleteProfileForm() {
             Last Name
           </label>
           <input
-            type="text"
-            name="lastName"
             id="lastName"
+            name="lastName"
             value={formData.lastName}
             onChange={handleChange}
             required
             className="mt-1 block w-full rounded-md border-gray-300 p-2 shadow-sm"
           />
         </div>
-        {/* ... Add all other text input fields in the same pattern ... */}
 
+        {/* more fields... */}
         <div className="sm:col-span-2">
           <p className="text-sm font-medium text-gray-700">
             Please select registration type
           </p>
           <div className="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <label
-              htmlFor="patient-role"
-              className={`relative flex cursor-pointer rounded-lg border p-4 focus:outline-none ${
+              className={`relative flex cursor-pointer rounded-lg border p-4 ${
                 role === "patient"
                   ? "border-blue-600 ring-2 ring-blue-600"
                   : "border-gray-300"
@@ -159,23 +198,18 @@ export default function CompleteProfileForm() {
               <input
                 type="radio"
                 name="role"
-                id="patient-role"
                 value="patient"
                 checked={role === "patient"}
                 onChange={() => setRole("patient")}
                 className="sr-only"
               />
-              <span className="flex flex-1">
-                <span className="flex flex-col">
-                  <span className="block text-sm font-medium text-gray-900">
-                    I'm an individual / patient
-                  </span>
-                </span>
+              <span className="block text-sm font-medium text-gray-900">
+                I'm an individual / patient
               </span>
             </label>
+
             <label
-              htmlFor="doctor-role"
-              className={`relative flex cursor-pointer rounded-lg border p-4 focus:outline-none ${
+              className={`relative flex cursor-pointer rounded-lg border p-4 ${
                 role === "doctor"
                   ? "border-blue-600 ring-2 ring-blue-600"
                   : "border-gray-300"
@@ -184,18 +218,13 @@ export default function CompleteProfileForm() {
               <input
                 type="radio"
                 name="role"
-                id="doctor-role"
                 value="doctor"
                 checked={role === "doctor"}
                 onChange={() => setRole("doctor")}
                 className="sr-only"
               />
-              <span className="flex flex-1">
-                <span className="flex flex-col">
-                  <span className="block text-sm font-medium text-gray-900">
-                    I'm a specialist / doctor
-                  </span>
-                </span>
+              <span className="block text-sm font-medium text-gray-900">
+                I'm a specialist / doctor
               </span>
             </label>
           </div>
@@ -211,6 +240,8 @@ export default function CompleteProfileForm() {
           </button>
         </div>
       </form>
+
+      {error && <p className="mt-4 text-center text-red-500">{error}</p>}
     </div>
   );
 }

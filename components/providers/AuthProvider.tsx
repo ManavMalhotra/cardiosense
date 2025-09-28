@@ -7,14 +7,10 @@ import { ref, get } from "firebase/database";
 import { auth, db } from "@/lib/firebase";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setUser, setAuthStatus, clearUser } from "@/store/authSlice";
-import type { User } from "@/lib/types";
-// import LoadingSpinner from "../common/LoadingSpinner";
-import { Progress } from "@/components/ui/progress";
 
 const AUTH_ROUTES = ["/login", "/register", "/complete-profile"];
 const PROTECTED_ROUTES = ["/dashboard"];
 
-// This is a placeholder, create a real one in components/common/
 const LoadingSpinner = () => (
   <div className="flex min-h-screen items-center justify-center">
     Loading...
@@ -30,67 +26,74 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     dispatch(setAuthStatus("loading"));
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        const userRef = ref(db, `users/${firebaseUser.uid}`);
-        const snapshot = await get(userRef);
-
-        if (snapshot.exists()) {
-          const userData = snapshot.val() as User;
-          dispatch(setUser(userData));
+      try {
+        if (firebaseUser) {
+          const snapshot = await get(ref(db, `users/${firebaseUser.uid}`));
+          if (snapshot.exists()) {
+            const userData = snapshot.val();
+            // Accept minimal patient stub OR full doctor profile
+            if (userData.role === "patient" || userData.role === "doctor") {
+              dispatch(setUser(userData));
+            } else {
+              dispatch(clearUser());
+            }
+          } else {
+            // no /users entry yet
+            dispatch(clearUser());
+          }
         } else {
-          // **NEW LOGIC**: User is authenticated but has no profile data.
-          // This is the "complete profile" state. We clear any old user data
-          // but keep them authenticated.
           dispatch(clearUser());
-          dispatch(setAuthStatus("succeeded")); // Mark auth check as done
         }
-      } else {
+      } catch (err) {
+        console.error("AuthProvider onAuthStateChanged error:", err);
         dispatch(clearUser());
+      } finally {
+        // mark the auth DB check complete
+        dispatch(setAuthStatus("succeeded"));
       }
     });
 
     return () => unsubscribe();
   }, [dispatch]);
 
+  // Redirect logic runs only AFTER status is not loading
   useEffect(() => {
     if (status === "loading") return;
 
-    const firebaseUser: FirebaseUser | null = auth.currentUser;
+    const firebaseUser = auth.currentUser;
     const isProtectedRoute = PROTECTED_ROUTES.some((p) =>
       pathname.startsWith(p)
     );
     const isAuthRoute = AUTH_ROUTES.includes(pathname);
 
-    // Case 1: Not authenticated, trying to access a protected route
+    // Not authenticated but trying to access protected
     if (!firebaseUser && isProtectedRoute) {
       router.push("/login");
       return;
     }
 
-    // Case 2: Authenticated, but has no profile in our DB yet.
-    // Force them to complete their profile.
+    // Authenticated but no user (profile) in our DB — send to complete-profile
     if (firebaseUser && !user && pathname !== "/complete-profile") {
       router.push("/complete-profile");
       return;
     }
 
-    // Case 3: Fully authenticated (profile exists), trying to access an auth page
+    // Authenticated and user exists, don't allow visiting auth routes
     if (user && isAuthRoute) {
       router.push("/dashboard");
       return;
     }
   }, [user, status, pathname, router]);
 
-  if (status === "loading") {
-    return <LoadingSpinner />;
-  }
+  if (status === "loading") return <LoadingSpinner />;
 
-  // Prevent flicker for redirects
+  // Prevent flicker: if user is authenticated but Redux user isn't yet available,
+  // block until we have decided.
   const firebaseUser = auth.currentUser;
   if (firebaseUser && !user && pathname !== "/complete-profile")
     return <LoadingSpinner />;
   if (!firebaseUser && PROTECTED_ROUTES.some((p) => pathname.startsWith(p)))
     return <LoadingSpinner />;
 
-  return children;
+  return <>{children}</>;
 }

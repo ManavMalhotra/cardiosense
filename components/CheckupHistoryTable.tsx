@@ -1,30 +1,37 @@
+"use client";
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
-const mockCheckups = [
-  { date: "27-Sept-2025", time: "10:30 AM", status: "Good", score: 80 },
-  { date: "23-Sept-2025", time: "09:00 AM", status: "OK", score: 50 },
-  { date: "21-Sept-2025", time: "11:00 AM", status: "Good", score: 90 },
-  { date: "18-Sept-2025", time: "02:15 PM", status: "Good", score: 75 },
-  { date: "12-Sept-2025", time: "08:45 AM", status: "Bad", score: 35 },
-];
-// Updated helper for custom badge styles
+// Types for incoming reports
+type Report = {
+  date: string;
+  title: string;
+  summary: string;
+  filePath: string;
+};
+
+type CheckupHistoryTableProps = {
+  reports: Report[];
+};
+
+// Badge styles
 const StatusBadge = ({ status }: { status: string }) => {
   let baseClasses = "px-3 py-1 text-xs font-medium rounded-full";
-  if (status === "Good") {
+  if (status.toLowerCase() === "good") {
     return (
       <span className={`${baseClasses} bg-indigo-100 text-indigo-800`}>
         Good
       </span>
     );
   }
-  if (status === "OK") {
+  if (status.toLowerCase() === "ok") {
     return (
       <span className={`${baseClasses} bg-gray-100 text-gray-800`}>OK</span>
     );
   }
-  if (status === "Bad") {
+  if (status.toLowerCase() === "bad") {
     return (
       <span className={`${baseClasses} bg-red-100 text-red-800`}>Bad</span>
     );
@@ -34,7 +41,9 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
-const CheckupHistoryTable = () => {
+const CheckupHistoryTable: React.FC<CheckupHistoryTableProps> = ({
+  reports,
+}) => {
   return (
     <Card className="shadow-sm">
       <CardHeader>
@@ -49,19 +58,19 @@ const CheckupHistoryTable = () => {
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase"
                 >
-                  Checkup
+                  Date
                 </th>
                 <th
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase"
                 >
-                  Status
+                  Title
                 </th>
                 <th
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase"
                 >
-                  Score
+                  Summary
                 </th>
                 <th
                   scope="col"
@@ -72,26 +81,22 @@ const CheckupHistoryTable = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {mockCheckups.map((checkup, index) => (
+              {reports.map((report, index) => (
                 <tr key={index}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{`${checkup.date} + ${checkup.time}`}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <StatusBadge status={checkup.status} />
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                    {report.date}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                      <Progress
-                        value={checkup.score}
-                        className="w-28 h-2 bg-gray-200 [&>div]:bg-indigo-500"
-                      />
-                      <span className="text-sm font-semibold text-gray-600">
-                        {checkup.score}%
-                      </span>
-                    </div>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                    {report.title}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                    {report.summary}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <a
-                      href="#"
+                      href={`/${report.filePath}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="text-indigo-600 hover:text-indigo-900"
                     >
                       View
