@@ -48,7 +48,7 @@ export default function LoginForm() {
   return (
     <div className="rounded-lg border bg-white p-8 shadow-sm">
       <div className="text-left">
-        <h1 className="text-2xl font-bold text-gray-900">Login</h1>
+        <h1 className="text-3xl font-semibold text-gray-900">Login</h1>
         <p className="mt-1 text-gray-500">Please enter your details</p>
       </div>
 
@@ -66,7 +66,7 @@ export default function LoginForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+            className="mt-1 block w-full rounded-md border border-gray-300 focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3"
             placeholder="you@example.com"
           />
         </div>
@@ -84,7 +84,7 @@ export default function LoginForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+            className="mt-1 block w-full rounded-md border border-gray-300 focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3"
             placeholder="••••••••"
           />
         </div>
@@ -95,7 +95,7 @@ export default function LoginForm() {
           Don't have an account?{" "}
           <Link
             href="/register"
-            className="font-medium text-blue-600 hover:underline"
+            className="font-medium text-[#3B82F6] hover:underline"
           >
             Create account
           </Link>
@@ -104,7 +104,7 @@ export default function LoginForm() {
         <button
           type="submit"
           disabled={isLoading || isGoogleLoading}
-          className="w-full justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+          className="w-full justify-center rounded-md border border-transparent bg-[#3B82F6] py-3 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
         >
           {isLoading ? "Logging in..." : "Login"}
         </button>
@@ -122,7 +122,7 @@ export default function LoginForm() {
       <button
         onClick={handleGoogleLogin}
         disabled={isLoading || isGoogleLoading}
-        className="w-full flex justify-center items-center gap-2 rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+        className="w-full flex justify-center items-center gap-2 rounded-md border border-gray-300 bg-white py-3 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
       >
         <svg className="h-5 w-5" viewBox="0 0 48 48">
           {" "}
