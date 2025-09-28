@@ -29,7 +29,7 @@ export function Hero() {
           }
         </p>
         <div className="flex items-center gap-3">
-          <Link href="/sign-in">
+          <Link href="/register">
             <Button className="gap-1">
               Get Started
               <ArrowRight className="h-4 w-4" aria-hidden="true" />

@@ -10,7 +10,7 @@ const base =
   "disabled:pointer-events-none disabled:opacity-50 ring-offset-background"
 
 const variantClasses: Record<Variant, string> = {
-  default: "bg-[#3B82F6] text-primary-foreground hover:bg-primary/90",
+  default: "bg-[#3B82F6] text-primary-foreground hover:bg-[#2467D4]",
   secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
   outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
   ghost: "hover:bg-accent hover:text-accent-foreground",

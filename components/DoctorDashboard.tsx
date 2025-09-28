@@ -73,7 +73,7 @@ export default function DoctorDashboard({ patients }: DoctorDashboardProps) {
           <button
             onClick={handleAddPatient}
             disabled={adding}
-            className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+            className="px-6 py-3 rounded-md bg-[#3B82F6] text-white hover:bg-blue-600 disabled:opacity-50"
           >
             {adding ? "Adding..." : "Add Patient"}
           </button>

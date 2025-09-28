@@ -2,6 +2,8 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import Image from "next/image";
+import cardiosense_logo from "@/app/img/cardiosense_logo.svg"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,12 +21,7 @@ import { ChevronDownIcon } from "@heroicons/react/20/solid";
 
 // FIX 1: Bolder, more prominent logo bars
 const CardioSenseLogo = () => (
-  <div className="flex items-center gap-3">
-    <div className="flex items-end gap-1.5">
-    </div>
-    <h1 className="text-3xl font-black text-gray-800">CardioSense</h1>
-      <span className="bg-indigo-400 w-4 h-9"></span>
-  </div>
+  <Image src={cardiosense_logo} alt="CardioSense logo" className="w-50 m-2 ms-0 rounded" />
 );
 
 // FIX 2: More realistic notification data structure
