@@ -32,11 +32,11 @@ const Sidebar = () => {
               href={item.href}
               onClick={() => setActiveNav(item.name)}
               className={`
-                h-14 w-14 flex items-center justify-center rounded-2xl transition-colors duration-200
+                h-14 w-14 flex items-center justify-center rounded-full transition-colors duration-200
                 ${
                   isActive
                     ? 'bg-blue-500 text-white shadow-lg'
-                    : 'text-gray-400 hover:bg-blue-50 hover:text-blue-500'
+                    : 'text-[#8B5CF6] hover:bg-blue-50 '
                 }
               `}
               aria-label={item.name}

@@ -27,7 +27,7 @@ export default function PatientDetailPage() {
       try {
         const snapshot = await get(ref(db, `patients/${id}`));
         if (snapshot.exists()) {
-          setPatient({ id, ...snapshot.val() });
+          setPatient({ id: id as string, ...snapshot.val() });
         }
       } catch (err) {
         console.error("Error fetching patient:", err);
@@ -44,31 +44,61 @@ export default function PatientDetailPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Patient Card */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-bold mb-4">Patient Details</h2>
-        <p>
-          <strong>ID:</strong> {patient.id}
-        </p>
-        <p>
-          <strong>Name:</strong> {patient.name}
-        </p>
-        <p>
-          <strong>DOB:</strong> {patient.dob || "Not set"}
-        </p>
-        <p>
-          <strong>Gender:</strong> {patient.gender || "Not set"}
-        </p>
-        <p>
-          <strong>Height:</strong> {patient.height_cm || "Not set"} cm
-        </p>
-        <p>
-          <strong>Weight:</strong> {patient.weight_kg || "Not set"} kg
-        </p>
+      <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-semibold text-gray-800">
+            Patient Details
+          </h2>
+          <span className="text-sm text-gray-500">Last updated: Today</span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-6">
+          {/* Left Column */}
+          <div className="space-y-3">
+            <div>
+              <p className="text-xs text-gray-400 uppercase">Patient ID</p>
+              <p className="text-sm font-medium text-gray-800">{patient.id}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-400 uppercase">Date of Birth</p>
+              <p className="text-sm font-medium text-gray-800">
+                {patient.dob || "Not set"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-400 uppercase">Height</p>
+              <p className="text-sm font-medium text-gray-800">
+                {patient.height_cm || "Not set"} cm
+              </p>
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-3">
+            <div>
+              <p className="text-xs text-gray-400 uppercase">Name</p>
+              <p className="text-sm font-medium text-gray-800">
+                {patient.name}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-400 uppercase">Gender</p>
+              <p className="text-sm font-medium text-gray-800">
+                {patient.gender || "Not set"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-400 uppercase">Weight</p>
+              <p className="text-sm font-medium text-gray-800">
+                {patient.weight_kg || "Not set"} kg
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Patient Dashboard */}
-      <PatientDashboard />
+      {/* Patient Dashboard (pass the ID explicitly!) */}
+      <PatientDashboard patientId={id as string} />
     </div>
   );
 }

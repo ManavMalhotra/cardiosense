@@ -23,21 +23,24 @@ type PatientData = {
   reports: Report[];
 };
 
-export default function PatientDashboard() {
+export default function PatientDashboard({
+  patientId,
+}: {
+  patientId?: string;
+}) {
   const [patient, setPatient] = useState<PatientData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const patientId = localStorage.getItem("patientId");
-    if (!patientId) {
-      console.error("No patientId found in localStorage");
+    const id = patientId || localStorage.getItem("patientId");
+    if (!id) {
       setLoading(false);
       return;
     }
 
     const fetchPatient = async () => {
       try {
-        const snapshot = await get(ref(db, `patients/${patientId}`));
+        const snapshot = await get(ref(db, `patients/${id}`));
         if (snapshot.exists()) {
           setPatient(snapshot.val() as PatientData);
         }
@@ -49,7 +52,7 @@ export default function PatientDashboard() {
     };
 
     fetchPatient();
-  }, []);
+  }, [patientId]);
 
   if (loading) {
     return <div className="p-6">Loading patient data...</div>;
@@ -68,11 +71,9 @@ export default function PatientDashboard() {
           <span className="text-gray-500 font-normal">Live readings</span>
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Placeholder for live readings */}
           <div className="h-40 border rounded flex items-center justify-center text-gray-400">
             Space for Live Readings
           </div>
-          {/* Placeholder for graph */}
           <div className="h-40 border rounded flex items-center justify-center text-gray-400">
             Space for Graph
           </div>
@@ -83,29 +84,9 @@ export default function PatientDashboard() {
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-purple-600">
-            {/* Example health score: can calculate from reports */}
-            {patient.reports && patient.reports.length > 0
-              ? "96.28%"
-              : "--"}{" "}
+            {patient.reports?.length > 0 ? "96.28%" : "--"}{" "}
             <span className="text-gray-600 text-base">Health Score</span>
           </h2>
-          <div className="flex gap-2 text-sm">
-            <button className="px-3 py-1 rounded bg-blue-50 hover:bg-blue-100 text-blue-600">
-              1d
-            </button>
-            <button className="px-3 py-1 rounded bg-blue-50 hover:bg-blue-100 text-blue-600">
-              1w
-            </button>
-            <button className="px-3 py-1 rounded bg-blue-50 hover:bg-blue-100 text-blue-600">
-              1m
-            </button>
-            <button className="px-3 py-1 rounded bg-blue-50 hover:bg-blue-100 text-blue-600">
-              1y
-            </button>
-            <button className="px-3 py-1 rounded bg-blue-600 text-white">
-              All Time
-            </button>
-          </div>
         </div>
         <HealthScoreGraph />
       </div>
