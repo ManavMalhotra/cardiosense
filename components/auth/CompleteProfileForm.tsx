@@ -137,7 +137,7 @@ export default function CompleteProfileForm() {
 
   return (
     <div className="rounded-lg border bg-white p-8 shadow-sm">
-      <h1 className="text-2xl font-bold text-gray-900">
+      <h1 className="text-3xl font-semibold text-gray-900">
         Complete your profile
       </h1>
       <p className="mt-1 text-gray-500">Please enter your details</p>
@@ -160,7 +160,7 @@ export default function CompleteProfileForm() {
             value={formData.firstName}
             onChange={handleChange}
             required
-            className="mt-1 block w-full rounded-md border-gray-300 p-2 shadow-sm"
+            className="mt-1 block w-full rounded-md border border-gray-300 p-3"
           />
         </div>
 
@@ -178,7 +178,7 @@ export default function CompleteProfileForm() {
             value={formData.lastName}
             onChange={handleChange}
             required
-            className="mt-1 block w-full rounded-md border-gray-300 p-2 shadow-sm"
+            className="mt-1 block w-full rounded-md border border-gray-300 p-3"
           />
         </div>
 
@@ -191,7 +191,7 @@ export default function CompleteProfileForm() {
             <label
               className={`relative flex cursor-pointer rounded-lg border p-4 ${
                 role === "patient"
-                  ? "border-blue-600 ring-2 ring-blue-600"
+                  ? "border-[#8B5CF6] ring-2 ring-[#8B5CF6] text-[#8B5CF6] font-semibold"
                   : "border-gray-300"
               }`}
             >
@@ -203,7 +203,7 @@ export default function CompleteProfileForm() {
                 onChange={() => setRole("patient")}
                 className="sr-only"
               />
-              <span className="block text-sm font-medium text-gray-900">
+              <span className="block text-sm font-medium">
                 I'm an individual / patient
               </span>
             </label>
@@ -211,7 +211,7 @@ export default function CompleteProfileForm() {
             <label
               className={`relative flex cursor-pointer rounded-lg border p-4 ${
                 role === "doctor"
-                  ? "border-blue-600 ring-2 ring-blue-600"
+                  ? "border-[#8B5CF6] ring-2 ring-[#8B5CF6] text-[#8B5CF6] font-semibold"
                   : "border-gray-300"
               }`}
             >
@@ -223,7 +223,7 @@ export default function CompleteProfileForm() {
                 onChange={() => setRole("doctor")}
                 className="sr-only"
               />
-              <span className="block text-sm font-medium text-gray-900">
+              <span className="block text-sm font-medium">
                 I'm a specialist / doctor
               </span>
             </label>
@@ -234,7 +234,7 @@ export default function CompleteProfileForm() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full justify-center rounded-md border border-transparent bg-blue-600 py-3 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
+            className="w-full justify-center rounded-md border border-transparent bg-[#3B82F6] py-3 px-4 text-sm font-medium text-white hover:bg-blue-600 disabled:opacity-50"
           >
             {isLoading ? "Saving..." : "Submit"}
           </button>

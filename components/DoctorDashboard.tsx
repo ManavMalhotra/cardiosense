@@ -36,13 +36,11 @@ export default function DoctorDashboard({ patients }: DoctorDashboardProps) {
     const value = e.target.value.trim();
     setScannedId(value);
 
-    // assume RFID IDs are >= 6 chars
     if (value.length >= 6) {
       setLoadingScan(true);
       try {
         const snapshot = await get(ref(db, `patients/${value}`));
         if (snapshot.exists()) {
-          // ✅ Redirect doctor to patient/[id]
           setShowScannerModal(false);
           router.push(`/patient/${value}`);
         } else {
